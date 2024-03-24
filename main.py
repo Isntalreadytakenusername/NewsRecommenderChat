@@ -15,6 +15,10 @@ feeds_urls = [
     'https://rss.nytimes.com/services/xml/rss/nyt/Health.xml'
 ]
 
-from NewsRetriever import NewsRetriever
-news_retriever = NewsRetriever(feeds_urls, "rss_feed_data.csv")
-news_retriever.retrieve_news()
+# Retrieve news from RSS feeds
+news_retriever = NewsRetriever(feeds_urls)
+news_df = news_retriever.retrieve_news()
+
+# Store news title+summary as embeddings in a vector database with metadata
+news_vector_storage = NewsVectorStorage(news_dataframe=news_df)
+news_vector_storage.load_news()
