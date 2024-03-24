@@ -11,6 +11,7 @@ class RecommendationTemplateConstructor:
 User preferences: {preferences}
 ---------------------
 Provide a list of topics that the user might be interested in based on their interaction history and preferences in form of a JSON.
+Make sure the topics you suggest make sense for news recommendations. Do not produce random topics.
 Example: topics_of_interest: ['US Presidential Elections', 'Cake recipies', 'Bitcoin']
             '''
     

@@ -8,3 +8,5 @@ LLM_interactions/test_gpt_rec.ipynb
 *.sqlite3
 /RSS_feed_collector/__pycache__
 RSS_feed_collector/__pycache__/NewsRetriever.cpython-39.pyc
+test*.ipynb
+*.pyc
