@@ -34,6 +34,11 @@ from LLM_interactions.RecommendationTemplateConstructor import RecommendationTem
 
 app = FastAPI()
 
+# create a hello return in the root
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
 @app.get("/get_recommendations/{user_id}")
 def get_recommendations(user_id: str):
     template_constructor = RecommendationTemplateConstructor(last_days_interaction=7)
