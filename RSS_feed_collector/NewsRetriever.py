@@ -3,8 +3,7 @@ import feedparser
 from urllib.parse import urlparse
 
 class NewsRetriever:
-    """Manages retrieval and storage of news from RSS feeds.
-    csv file is used as the volume is not too large to justify a database.
+    """Manages retrieval of news from RSS feeds to than be stored in a vector database
     """
     def __init__(self, rss_feeds:list) -> None:
         self.rss_feeds = rss_feeds
