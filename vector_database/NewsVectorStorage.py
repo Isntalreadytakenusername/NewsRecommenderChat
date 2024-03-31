@@ -1,6 +1,6 @@
 import chromadb
 import pandas as pd
-
+import time
 
 class NewsVectorStorage:
     def __init__(self) -> None:
@@ -21,11 +21,18 @@ class NewsVectorStorage:
         # get the list of textual data that we want to store in the vector database
         news_dataframe.drop_duplicates(subset=['link'], inplace=True)
         documents = news_dataframe.apply(lambda row: str(row['title']) + ' ' + str(row['summary']), axis=1).tolist()
+        
         # get the dictionary of metadata that we want to store in the vector database
         metadatas = metadatas=news_dataframe[['link', 'domain', 'published', 'title', 'summary']].to_dict(orient='records')  #  orient='records' instructs Pandas to represent each row in the DataFrame as a separate dictionary within a list
+        
         # we use link as the unique identifier for each document (article)
         ids = news_dataframe.apply(lambda row: str(row['link']), axis=1).tolist()
-        self._collection.upsert(documents=documents, metadatas=metadatas, ids=ids)
+        #self._collection.upsert(documents=documents, metadatas=metadatas, ids=ids)
+        # upsert each document and its metadata one by one to prevent memory issues on the server
+        for doc, meta, id in zip(documents, metadatas, ids):
+            print("upserting document with id: ", id)
+            self._collection.upsert(documents=[doc], metadatas=[meta], ids=[id])
+            time.sleep(0.1)
         
     def _dataframize_query_results(self, results):
         flattened_data = []
