@@ -32,7 +32,6 @@ class NewsVectorStorage:
         for doc, meta, id in zip(documents, metadatas, ids):
             print("upserting document with id: ", id)
             self._collection.upsert(documents=[doc], metadatas=[meta], ids=[id])
-            time.sleep(0.1)
         
     def _dataframize_query_results(self, results):
         flattened_data = []
