@@ -48,8 +48,13 @@ class GPTRecommender:
         )
         return json.loads(response.choices[0].message.content)
     
+    def prepare_response_json(self, recommended_titles: pd.DataFrame, explanations: list) -> dict:
+        response = {key: list(value.values()) for key, value in recommended_titles.to_dict().items()}
+        response["explanations"] = explanations
+        return response
+    
     def get_recommendations(self, user_id: str) -> pd.DataFrame:
         candidates = self.get_candidates(user_id)
         recommended_json = self.get_recommended_titles(user_id, candidates)
         recommended_titles = recommended_json["candidates"]
-        return self._current_candidates[self._current_candidates['title'].isin(recommended_titles)], recommended_json["explanations"]
+        return self.prepare_response_json(self._current_candidates[self._current_candidates['title'].isin(recommended_titles)], recommended_json["explanations"])
