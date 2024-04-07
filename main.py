@@ -81,5 +81,6 @@ async def submit_name_date(user_click: UserClick):
 
     try:
         AppInformationHandler.save_user_click(user_click)
+        return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
