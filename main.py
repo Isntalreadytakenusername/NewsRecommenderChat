@@ -28,10 +28,14 @@
 
 from fastapi import FastAPI
 
+from fastapi import FastAPI, HTTPException
+
 from LLM_interactions.GPTRecommender import GPTRecommender
 from LLM_interactions.RecommendationTemplateConstructor import RecommendationTemplateConstructor
 from RSS_feed_collector.NewsRetriever import NewsRetriever
 from vector_database.NewsVectorStorage import NewsVectorStorage
+from app_requests.UserClick import UserClick
+from app_requests.AppInformationHandler import AppInformationHandler
 
 app = FastAPI()
 
@@ -68,4 +72,14 @@ def get_recommendations(user_id: str):
     recommender = GPTRecommender(template_constructor=template_constructor)
     return recommender.get_recommendations(user_id=user_id)
 
+# here I want to enable the app to send the data about what articles the user clicked on
 
+@app.post("/submit_user_click/")
+async def submit_name_date(user_click: UserClick):
+    # Assuming you want to print or use the data somehow
+    print(f"Received a user click. Name: {user_click.user_id}, Date: {user_click.title}, Date: {user_click.date}, Domain: {user_click.domain}")
+
+    try:
+        AppInformationHandler.save_user_click(user_click)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
