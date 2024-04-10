@@ -1,0 +1,10 @@
+User preferences currently: {preferences}
+Users request to adjust preferences: {request}
+---------------------
+If the user's request is relevant to adjusting the user's preferences, provide the updated version of the user's preferences, otherwise indicate them as null and in the "response" field indicate to the user that the request is not relevant. Ouptut a JSON
+Preserve the old user's preferences details, if user haven't explicitly indicated to remove them.
+Example: {{preferences: "Updated text describing the user's preferences", response: "Your preferences have been updated successfully."}}
+Example if the request is not relevant: {{preferences: null, response: "Your request is not relevant to updating your preferences."}}
+REMEMBER: Preserve the old user's preferences details, if user haven't explicitly indicated to remove them. Your task is to compose a new preference based on the old one and user's request, not to overwrite the old one.
+The resulting preference should also be describing the user concisely rather then just paraphrasing the user's request.
+Example of a user's preference: "Interested in sports, especially football and basketball. Enjoys articles about traveling and cooking."
