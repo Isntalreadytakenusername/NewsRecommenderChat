@@ -58,3 +58,21 @@ class GPTRecommender:
         recommended_json = self.get_recommended_titles(user_id, candidates)
         recommended_titles = recommended_json["candidates"]
         return self.prepare_response_json(self._current_candidates[self._current_candidates['title'].isin(recommended_titles)], recommended_json["explanations"])
+    
+    def adjust_recommendations(self, user_id: str, request: str) -> dict:
+        prompt = self._template_constructor.construct_recommendation_adjustment_prompt(
+            user_id, request)
+        response = self._client.chat.completions.create(
+            model="gpt-4-turbo-preview",
+            response_format={"type": "json_object"},
+            temperature=0.1,
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        adjusted_recommendation = json.loads(response.choices[0].message.content)
+        
+        if adjusted_recommendation["preferences"] is not None:
+            with open(f'LLM_interactions/UserPreferences/{user_id}.txt', 'w') as file:
+                file.write(adjusted_recommendation["preferences"])
+        return adjusted_recommendation

@@ -36,6 +36,7 @@ from RSS_feed_collector.NewsRetriever import NewsRetriever
 from vector_database.NewsVectorStorage import NewsVectorStorage
 from app_requests.UserClick import UserClick
 from app_requests.AppInformationHandler import AppInformationHandler
+from app_requests.UserAdjustment import UserAdjustment
 
 app = FastAPI()
 
@@ -74,6 +75,7 @@ def get_recommendations(user_id: str):
 
 # here I want to enable the app to send the data about what articles the user clicked on
 
+# user id is inside the UserClick object
 @app.post("/submit_user_click/")
 async def submit_name_date(user_click: UserClick):
     # Assuming you want to print or use the data somehow
@@ -84,3 +86,9 @@ async def submit_name_date(user_click: UserClick):
         return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+    
+@app.post("/adjust_recommendations/")
+async def adjust_recommendations(user_adjustment: UserAdjustment):
+    template_constructor = RecommendationTemplateConstructor(last_days_interaction=7)
+    recommender = GPTRecommender(template_constructor=template_constructor)
+    return {"response": recommender.adjust_recommendations(user_id=user_adjustment.user_id, request=user_adjustment.request)["response"]}

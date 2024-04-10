@@ -7,13 +7,14 @@ class RecommendationTemplateConstructor:
         self._user_interaction_history = None
         self._user_preferences = None
         self._last_days_interaction = last_days_interaction
-        self.template_topics = '''Articles that user interacted with in the last {days} days: {articles}
-User preferences: {preferences}
----------------------
-Provide a list of topics that the user might be interested in based on their interaction history and preferences in form of a JSON.
-Make sure the topics you suggest make sense for news recommendations. Do not produce random topics.
-Example: topics_of_interest: ['US Presidential Elections', 'Cake recipies', 'Bitcoin']
-            '''
+        self.template_topics = self.read_template('LLM_interactions/templates/template_topics.txt')
+#         self.template_topics = '''Articles that user interacted with in the last {days} days: {articles}
+# User preferences: {preferences}
+# ---------------------
+# Provide a list of topics that the user might be interested in based on their interaction history and preferences in form of a JSON.
+# Make sure the topics you suggest make sense for news recommendations. Do not produce random topics.
+# Example: topics_of_interest: ['US Presidential Elections', 'Cake recipies', 'Bitcoin']
+#             '''
         self.template_recommendations = '''Articles that user interacted with in the last {days} days: {articles}
         User preferences: {preferences}
         ---------------------
@@ -22,6 +23,19 @@ Example: topics_of_interest: ['US Presidential Elections', 'Cake recipies', 'Bit
         Can you provide a list of 10 articles that the user might be interested in based on their interaction history and preferences in form of a JSON along with explanations why you have recommended the article?
         Example: cadidates: ['Title1', 'Title2', 'Title3', 'Title4', 'Title5', 'Title6', 'Title7', 'Title8', 'Title9', 'Title10'], explanations: ['Explanation1', 'Explanation2', 'Explanation3', 'Explanation4', 'Explanation5', 'Explanation6', 'Explanation7', 'Explanation8', 'Explanation9', 'Explanation10']
         Ensure you keep the title names as they are in the data provided.'''
+        
+        self.template_recommendation_adjustment = '''User preferences currently: {preferences}
+        Users request to adjust preferences: {request}
+        ---------------------
+        If the user's request is relevant to adjusting the user's preferences, provide the updated version of the user's preferences, otherwise indicate them as null and in the "response" field indicate to the user that the request is not relevant. Ouptut a JSON
+        Preserve the old user's preferences details, if user haven't explicitly indicated to remove them.
+        Example: {{preferences: "Updated text describing the user's preferences", response: "Your preferences have been updated successfully."}}
+        Example if the request is not relevant: {{preferences: null, response: "Your request is not relevant to updating your preferences."}}
+        '''
+    
+    def read_template(self, template_path: str) -> str:
+        with open(template_path, 'r') as file:
+            return file.read()
     
     def _get_interaction_history(self, user_id: str) -> None:
         self._user_interaction_history = pd.read_csv(f'LLM_interactions/UserInteractionHistory/{user_id}_interactions_history.csv', parse_dates=['date'], dayfirst=True)
@@ -46,3 +60,9 @@ Example: topics_of_interest: ['US Presidential Elections', 'Cake recipies', 'Bit
                                                                              articles=self._user_interaction_history['title'].tolist(),
                                                                              preferences=self._user_preferences, candidates=candidate_titles)
         return self.template_recommendations
+    
+    def construct_recommendation_adjustment_prompt(self, user_id: str, request:str) -> str:
+        self._get_user_preferences(user_id)
+        self.template_recommendation_adjustment = self.template_recommendation_adjustment.format(preferences=self._user_preferences, request=request)
+        return self.template_recommendation_adjustment
+    
