@@ -69,6 +69,7 @@ def load_new_news():
 
 @app.get("/get_recommendations/{user_id}")
 def get_recommendations(user_id: str):
+    load_new_news() # for now I handle news updates like this
     template_constructor = RecommendationTemplateConstructor(last_days_interaction=7)
     recommender = GPTRecommender(template_constructor=template_constructor)
     return recommender.get_recommendations(user_id=user_id)
