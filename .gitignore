@@ -10,3 +10,5 @@ LLM_interactions/test_gpt_rec.ipynb
 RSS_feed_collector/__pycache__/NewsRetriever.cpython-39.pyc
 test*.ipynb
 *.pyc
+vector_database/last_updated_time.txt
+vector_database/__pycache__/NewsVectorStorage.cpython-39.pyc

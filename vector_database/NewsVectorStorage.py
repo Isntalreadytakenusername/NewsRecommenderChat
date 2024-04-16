@@ -17,6 +17,7 @@ class NewsVectorStorage:
         except Exception:
             self._collection = self._news_vector_db_client.create_collection(
                 name=self._collection_name)
+    
     def load_news(self, news_dataframe):
         # get the list of textual data that we want to store in the vector database
         news_dataframe.drop_duplicates(subset=['link'], inplace=True)
@@ -32,6 +33,23 @@ class NewsVectorStorage:
         for doc, meta, id in zip(documents, metadatas, ids):
             print("upserting document with id: ", id)
             self._collection.upsert(documents=[doc], metadatas=[meta], ids=[id])
+    
+    def _write_last_updated_time(self):
+        with open('vector_database/last_updated_time.txt', 'w') as f:
+            f.write(str(time.time()))
+            
+    def _read_last_updated_time(self):
+        try:
+            with open('vector_database/last_updated_time.txt', 'r') as f:
+                return float(f.read())
+        except FileNotFoundError:
+            return False
+        
+    def are_news_outdated(self):
+        last_updated_time = self._read_last_updated_time()
+        if last_updated_time:
+            return time.time() - last_updated_time > 60 * 60 * 24  # 24 hours
+        return True
         
     def _dataframize_query_results(self, results):
         flattened_data = []

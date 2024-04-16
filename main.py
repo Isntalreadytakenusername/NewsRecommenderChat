@@ -57,15 +57,17 @@ def load_new_news():
     'https://rss.nytimes.com/services/xml/rss/nyt/Health.xml'
     ]
 
-    # Retrieve news from RSS feeds
-    news_retriever = NewsRetriever(feeds_urls)
-    news_df = news_retriever.retrieve_news()
-
     # Store news title+summary as embeddings in a vector database with metadata
     news_vector_storage = NewsVectorStorage()
-    news_vector_storage.load_news(news_dataframe=news_df)
+    if news_vector_storage.are_news_outdated():
+        # Retrieve news from RSS feeds
+        news_retriever = NewsRetriever(feeds_urls)
+        news_df = news_retriever.retrieve_news()
 
-    return {"status": "success"}
+        news_vector_storage.load_news(news_dataframe=news_df)
+        news_vector_storage._write_last_updated_time()
+        return {"status": "success"}
+    return {"status": "already updated"}
 
 @app.get("/get_recommendations/{user_id}")
 def get_recommendations(user_id: str):
