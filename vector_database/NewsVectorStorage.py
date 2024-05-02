@@ -1,6 +1,8 @@
 import chromadb
 import pandas as pd
 import time
+from datetime import datetime, timedelta
+import random
 
 class NewsVectorStorage:
     def __init__(self) -> None:
@@ -18,7 +20,22 @@ class NewsVectorStorage:
             self._collection = self._news_vector_db_client.create_collection(
                 name=self._collection_name)
     
+    @staticmethod
+    def older_than_n_days(published_date, n_days=3):
+            date_format = "%a, %d %b %Y %H:%M:%S"
+            trimmed_published_date = published_date[:-6]
+            published_datetime = datetime.strptime(trimmed_published_date, date_format)
+            return datetime.now() - published_datetime > timedelta(days=n_days)
+        
     def load_news(self, news_dataframe):
+        ## first delete all the news that are older than 3 days
+        old_to_delete = self._collection.get()
+        old_news_ids = [old_to_delete['ids'][index] for index, meta in enumerate(old_to_delete['metadatas']) if self.older_than_n_days(meta['published'])]
+        print("All news #: ", len(old_to_delete['ids']))
+        print("To be deleted: ", len(old_news_ids))
+        self._collection.delete(ids=old_news_ids)
+        
+        
         # get the list of textual data that we want to store in the vector database
         news_dataframe.drop_duplicates(subset=['link'], inplace=True)
         documents = news_dataframe.apply(lambda row: str(row['title']) + ' ' + str(row['summary']), axis=1).tolist()
@@ -81,4 +98,23 @@ class NewsVectorStorage:
         results_df.drop_duplicates(subset=['link'], inplace=True)
         # order by distance ascending and limit the number of articles
         return results_df.sort_values(by='distance').head(articles_limit)
+    
+    def query_random(self, articles_limit = 30):
+        results = self._collection.get()["ids"]
+        random_ids = random.sample(results, articles_limit)
+        results = self._collection.get(ids=random_ids)
+        return self.random_to_dataframe(results)
+    
+    @staticmethod
+    def random_to_dataframe(data_dict):
+        # Create a DataFrame from the 'metadatas' list of dictionaries, which contains most detailed fields
+        df = pd.DataFrame(data_dict['metadatas'])
+        
+        # Add the 'ids' field from the dictionary to the DataFrame
+        df['ids'] = data_dict['ids']
+        
+        # Add the 'documents' field from the dictionary to the DataFrame
+        df['documents'] = data_dict['documents']
+        
+        return df
         
