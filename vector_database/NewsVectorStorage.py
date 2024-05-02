@@ -107,14 +107,8 @@ class NewsVectorStorage:
     
     @staticmethod
     def random_to_dataframe(data_dict):
-        # Create a DataFrame from the 'metadatas' list of dictionaries, which contains most detailed fields
+        # Create a DataFrame from the 'metadatas' list of dictionaries
         df = pd.DataFrame(data_dict['metadatas'])
-        
-        # Add the 'ids' field from the dictionary to the DataFrame
-        df['ids'] = data_dict['ids']
-        
-        # Add the 'documents' field from the dictionary to the DataFrame
-        df['documents'] = data_dict['documents']
-        
+        df["distance"] = 0 # to keep the same format as the query results
         return df
         
