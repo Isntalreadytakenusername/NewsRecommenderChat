@@ -8,7 +8,10 @@ class AppInformationHandler:
     @staticmethod
     def save_user_click(user_click: UserClick):
         user_history_path = f"LLM_interactions/UserInteractionHistory/{user_click.user_id}_interactions_history.csv"
-        user_history = pd.read_csv(user_history_path)
+        try:
+            user_history = pd.read_csv(user_history_path)
+        except FileNotFoundError:
+            user_history = pd.DataFrame(columns=["title", "date", "domain"])
         
         new_interaction = pd.DataFrame([{
             "title": user_click.title,

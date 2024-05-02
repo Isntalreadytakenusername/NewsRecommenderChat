@@ -16,13 +16,19 @@ class RecommendationTemplateConstructor:
             return file.read()
     
     def _get_interaction_history(self, user_id: str) -> None:
-        self._user_interaction_history = pd.read_csv(f'LLM_interactions/UserInteractionHistory/{user_id}_interactions_history.csv', parse_dates=['date'], dayfirst=True)
-        # Filter interactions from the last 7 days
-        self._user_interaction_history = self._user_interaction_history[self._user_interaction_history['date'] >= (datetime.now() - timedelta(days=self._last_days_interaction))]
+        try:
+            self._user_interaction_history = pd.read_csv(f'LLM_interactions/UserInteractionHistory/{user_id}_interactions_history.csv', parse_dates=['date'], dayfirst=True)
+            # Filter interactions from the last 7 days
+            self._user_interaction_history = self._user_interaction_history[self._user_interaction_history['date'] >= (datetime.now() - timedelta(days=self._last_days_interaction))]
+        except FileNotFoundError:
+            self._user_interaction_history = pd.DataFrame(columns=["title", "date", "domain"])
     
     def _get_user_preferences(self, user_id: str) -> None:
-        with open(f'LLM_interactions/UserPreferences/{user_id}.txt', 'r') as file:
-            self._user_preferences = file.read()
+        try:
+            with open(f'LLM_interactions/UserPreferences/{user_id}.txt', 'r') as file:
+                self._user_preferences = file.read()
+        except FileNotFoundError:
+            self._user_preferences = "None"
     
     def construct_getting_topics_prompt(self, user_id: str) -> str:
         self._get_interaction_history(user_id)

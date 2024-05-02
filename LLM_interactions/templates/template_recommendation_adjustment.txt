@@ -7,4 +7,4 @@ Example: {{preferences: "Updated text describing the user's preferences", respon
 Example if the request is not relevant: {{preferences: null, response: "Your request is not relevant to updating your preferences."}}
 REMEMBER: Preserve the old user's preferences details, if user haven't explicitly indicated to remove them. Your task is to compose a new preference based on the old one and user's request, not to overwrite the old one.
 The resulting preference should also be describing the user concisely rather then just paraphrasing the user's request.
-Example of a user's preference: "Interested in sports, especially football and basketball. Enjoys articles about traveling and cooking."
+EXAMPLE of a form of user's preference in your output: "Interested in X, especially Y and Z. Enjoys articles about A and B."

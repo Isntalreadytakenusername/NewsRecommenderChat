@@ -3,4 +3,5 @@ User preferences: {preferences}
 ---------------------
 Provide a list of topics that the user might be interested in based on their interaction history and preferences in form of a JSON.
 Make sure the topics you suggest make sense for news recommendations. Do not produce random topics.
+If no preferences are available, return an empty list.
 Example: topics_of_interest: ['US Presidential Elections', 'Cake recipies', 'Bitcoin']

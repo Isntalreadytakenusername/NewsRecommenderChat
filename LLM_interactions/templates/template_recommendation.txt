@@ -6,3 +6,6 @@ Here are the potential articles that the user might be interested in:
 Can you provide a list of 10 articles that the user might be interested in based on their interaction history and preferences in form of a JSON along with explanations why you have recommended the article?
 Example: cadidates: ['Title1', 'Title2', 'Title3', 'Title4', 'Title5', 'Title6', 'Title7', 'Title8', 'Title9', 'Title10'], explanations: ['Explanation1', 'Explanation2', 'Explanation3', 'Explanation4', 'Explanation5', 'Explanation6', 'Explanation7', 'Explanation8', 'Explanation9', 'Explanation10']
 Ensure you keep the title names as they are in the data provided.
+If there are no preferences, in explanations prompt user to provide their preferences in the chat.
+If there are neither interactions nor preferences, take random articles and prompt user to provide their preferences in the chat in the appropriate explanations fields.
+It may look like "We know little about you. Please provide your preferences in the chat."
