@@ -4,6 +4,7 @@ from vector_database.NewsVectorStorage import NewsVectorStorage
 import pandas as pd
 import os
 import logging
+import numpy as np
 
 class GPTRecommender:
     """Class for interacting with OpenAI's GPT API for generating recommendations
@@ -19,6 +20,7 @@ class GPTRecommender:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
+        self.news_vector_storage = NewsVectorStorage()
         # Create file handler which logs even debug messages
         fh = logging.FileHandler(self._log_filename)
         fh.setLevel(logging.DEBUG)
@@ -45,16 +47,24 @@ class GPTRecommender:
     def get_candidates(self, user_id: str) -> dict:
         topics = self.get_topics(user_id)
         topics = topics["topics_of_interest"]
-        news_vector_storage = NewsVectorStorage()
         
         # handle the case when the are no use preferences yet
         if len(topics) == 0:
             # take random articles
             print("No topics of interest yet. Taking random articles.")
-            random_articles = news_vector_storage.query_random()
+            random_articles = self.news_vector_storage.query_random()
             return random_articles
-        news_df = news_vector_storage.query_topics(topics)
+        news_df = self.news_vector_storage.query_topics(topics)
         return news_df
+    
+    def get_random_diversified_candidates(self, recommended_titles: pd.DataFrame) -> pd.DataFrame:
+        print("Number of recommended articles: ", len(recommended_titles))
+        random_articles = self.news_vector_storage.query_random(5)
+        print("Number of random articles: ", len(random_articles))
+        random_articles["explanations"] = "We thought you might like these articles as well."
+        print("Number of random articles: ", len(random_articles))
+        return pd.concat([recommended_titles, random_articles], ignore_index=True)
+        
     
     def get_recommended_titles(self, user_id: str, candidates: pd.DataFrame) -> dict:
         self._current_candidates = candidates
@@ -71,8 +81,11 @@ class GPTRecommender:
         return json.loads(response.choices[0].message.content)
     
     def prepare_response_json(self, recommended_titles: pd.DataFrame, explanations: list) -> dict:
+        recommended_titles["explanations"] = explanations
+        recommended_titles = self.get_random_diversified_candidates(recommended_titles)
+        # recommended_titles.replace([np.inf, -np.inf], np.nan, inplace=True)
+        # recommended_titles.fillna(0, inplace=True)
         response = {key: list(value.values()) for key, value in recommended_titles.to_dict().items()}
-        response["explanations"] = explanations
         return response
     
     def _check_whether_user_is_new(self, user_id: str) -> None:
@@ -82,6 +95,15 @@ class GPTRecommender:
                 file.write("")
     
     def get_recommendations(self, user_id: str) -> pd.DataFrame:
+        """
+        Retrieves recommendations for a given user.
+
+        Args:
+            user_id (str): The ID of the user.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the recommended titles and explanations.
+        """
         self._check_whether_user_is_new(user_id)
         candidates = self.get_candidates(user_id)
         recommended_json = self.get_recommended_titles(user_id, candidates)
