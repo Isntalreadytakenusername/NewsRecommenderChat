@@ -158,7 +158,9 @@ class GPTRecommender:
         candidates = self.get_candidates(user_id)
         recommended_json = self.get_recommended_titles(user_id, candidates)
         recommended_titles = recommended_json["candidates"]
-        return self.prepare_response_json(self._current_candidates[self._current_candidates['title'].isin(recommended_titles)], recommended_json["explanations"])
+        response = self.prepare_response_json(self._current_candidates[self._current_candidates['title'].isin(recommended_titles)], recommended_json["explanations"])
+        self.logger.info(f"Response from GPT for recommendations: {response}")
+        return response
     
     def adjust_recommendations(self, user_id: str, request: str) -> dict:
         """Adjust recommendations based on user feedback.
@@ -168,7 +170,7 @@ class GPTRecommender:
             request (str): The user's adjustment request.
         
         Returns:
-            dict: A dictionary containing the response indicating whether the adjustement was successfull.
+            dict: A dictionary containing the response indicating whether the adjustement was successful.
         """
         
         prompt = self._template_constructor.construct_recommendation_adjustment_prompt(
