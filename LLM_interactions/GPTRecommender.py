@@ -124,6 +124,9 @@ class GPTRecommender:
         Returns:
             dict: The response JSON object with recommended titles and explanations.
         """
+        recommended_titles.drop_duplicates(subset=['title'], inplace=True)
+        self.logger.info(f"Recommended titles DF in prepare_response_json: {recommended_titles}")
+        self.logger.info(f"Explanations in prepare_response_json: {explanations}")
         recommended_titles["explanations"] = explanations
         recommended_titles = self.get_random_diversified_candidates(recommended_titles)
         response = {key: list(value.values()) for key, value in recommended_titles.to_dict().items()}
