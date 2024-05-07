@@ -4,3 +4,8 @@ https://rss.nytimes.com/services/xml/rss/nyt/Business.xml
 https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml
 https://rss.nytimes.com/services/xml/rss/nyt/Science.xml
 https://rss.nytimes.com/services/xml/rss/nyt/Health.xml
+https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml
+https://rss.nytimes.com/services/xml/rss/nyt/FashionandStyle.xml
+https://rss.nytimes.com/services/xml/rss/nyt/Books/Review.xml
+https://rss.nytimes.com/services/xml/rss/nyt/Movies.xml
+https://rss.nytimes.com/services/xml/rss/nyt/Travel.xml
