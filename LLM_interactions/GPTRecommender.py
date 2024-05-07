@@ -21,7 +21,6 @@ class GPTRecommender:
         self.logger.setLevel(logging.DEBUG)
 
         self.news_vector_storage = NewsVectorStorage()
-        # Create file handler which logs even debug messages
         fh = logging.FileHandler(self._log_filename)
         fh.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -29,6 +28,15 @@ class GPTRecommender:
         self.logger.addHandler(fh)
 
     def get_topics(self, user_id: str) -> dict:
+        """
+        Retrieves topics of interest for a given user.
+
+        Args:
+            user_id (str): The ID of the user.
+
+        Returns:
+            dict: A dictionary with one key containing the topics if interest like topics_of_interest: ['Topic1', 'Topic'...]
+        """
         prompt = self._template_constructor.construct_getting_topics_prompt(
             user_id)
         self.logger.info(f"Prompt to get topics: {prompt}")
@@ -44,29 +52,54 @@ class GPTRecommender:
         self.logger.info(f"Response from GPT for topics: {response}")
         return json.loads(response.choices[0].message.content)
     
-    def get_candidates(self, user_id: str) -> dict:
+    def get_candidates(self, user_id: str) -> pd.DataFrame:
+        """
+        Retrieves a dictionary of news articles that are potential candidates for recommendation based on the user's topics of interest.
+
+        Args:
+            user_id (str): The ID of the user.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the potential candidates for recommendation (max 30 nearest)
+        """
         topics = self.get_topics(user_id)
         topics = topics["topics_of_interest"]
         
-        # handle the case when the are no use preferences yet
+        # handle the case when there are no user preferences yet
         if len(topics) == 0:
-            # take random articles
-            print("No topics of interest yet. Taking random articles.")
             random_articles = self.news_vector_storage.query_random()
             return random_articles
+        
         news_df = self.news_vector_storage.query_topics(topics)
         return news_df
     
     def get_random_diversified_candidates(self, recommended_titles: pd.DataFrame) -> pd.DataFrame:
-        print("Number of recommended articles: ", len(recommended_titles))
+        """
+        Returns a DataFrame containing a combination of recommended titles and randomly selected articles.
+
+        Parameters:
+        recommended_titles (pd.DataFrame): A DataFrame containing the recommended titles.
+
+        Returns:
+        pd.DataFrame: A DataFrame containing a combination of recommended titles and randomly selected articles.
+        """
         random_articles = self.news_vector_storage.query_random(5)
-        print("Number of random articles: ", len(random_articles))
         random_articles["explanations"] = "We thought you might like these articles as well."
-        print("Number of random articles: ", len(random_articles))
         return pd.concat([recommended_titles, random_articles], ignore_index=True)
         
     
     def get_recommended_titles(self, user_id: str, candidates: pd.DataFrame) -> dict:
+        """
+        Ranking part. Retrieves recommended titles for a given user and candidates DataFrame.
+
+        Args:
+            user_id (str): The ID of the user.
+            candidates (pd.DataFrame): The DataFrame containing the candidate titles.
+
+        Returns:
+            dict: A dictionary containing the recommended titles.
+
+        """
         self._current_candidates = candidates
         prompt = self._template_constructor.construct_recommendation_prompt(
             user_id, candidates)
@@ -81,28 +114,45 @@ class GPTRecommender:
         return json.loads(response.choices[0].message.content)
     
     def prepare_response_json(self, recommended_titles: pd.DataFrame, explanations: list) -> dict:
+        """
+        Used after ranking. Prepares the response JSON object with recommended titles and adds random.
+
+        Args:
+            recommended_titles (pd.DataFrame): A DataFrame containing the recommended titles.
+            explanations (list): A list of explanations for the recommended titles.
+
+        Returns:
+            dict: The response JSON object with recommended titles and explanations.
+        """
         recommended_titles["explanations"] = explanations
         recommended_titles = self.get_random_diversified_candidates(recommended_titles)
-        # recommended_titles.replace([np.inf, -np.inf], np.nan, inplace=True)
-        # recommended_titles.fillna(0, inplace=True)
         response = {key: list(value.values()) for key, value in recommended_titles.to_dict().items()}
         return response
     
     def _check_whether_user_is_new(self, user_id: str) -> None:
-        # if user preferences file does not exist, create it
+        """
+        Checks whether the user is new by verifying the existence of the user preferences file.
+        If the file does not exist, it creates an empty file for the user.
+
+        Args:
+            user_id (str): The ID of the user.
+
+        Returns:
+            None
+        """
         if not os.path.exists(f'LLM_interactions/UserPreferences/{user_id}.txt'):
             with open(f'LLM_interactions/UserPreferences/{user_id}.txt', 'w') as file:
                 file.write("")
     
     def get_recommendations(self, user_id: str) -> pd.DataFrame:
         """
-        Retrieves recommendations for a given user.
+        The orchestrator function. Retrieves recommendations for a given user.
 
         Args:
             user_id (str): The ID of the user.
 
         Returns:
-            pd.DataFrame: A DataFrame containing the recommended titles and explanations.
+            dict: A dictionary containing the recommended titles. Represents the response JSON object that we return to the client.
         """
         self._check_whether_user_is_new(user_id)
         candidates = self.get_candidates(user_id)
@@ -111,6 +161,16 @@ class GPTRecommender:
         return self.prepare_response_json(self._current_candidates[self._current_candidates['title'].isin(recommended_titles)], recommended_json["explanations"])
     
     def adjust_recommendations(self, user_id: str, request: str) -> dict:
+        """Adjust recommendations based on user feedback.
+        
+        Args:
+            user_id (str): The ID of the user.
+            request (str): The user's adjustment request.
+        
+        Returns:
+            dict: A dictionary containing the response indicating whether the adjustement was successfull.
+        """
+        
         prompt = self._template_constructor.construct_recommendation_adjustment_prompt(
             user_id, request)
         self.logger.info(f"Prompt to adjust recommendations: {prompt}")

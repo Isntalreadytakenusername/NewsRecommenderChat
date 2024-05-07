@@ -28,12 +28,13 @@ class NewsVectorStorage:
             return datetime.now() - published_datetime > timedelta(days=n_days)
         
     def load_news(self, news_dataframe):
-        ## first delete all the news that are older than 3 days
+        # first delete all the news that are older than 3 days
         old_to_delete = self._collection.get()
         old_news_ids = [old_to_delete['ids'][index] for index, meta in enumerate(old_to_delete['metadatas']) if self.older_than_n_days(meta['published'])]
         print("All news #: ", len(old_to_delete['ids']))
         print("To be deleted: ", len(old_news_ids))
-        self._collection.delete(ids=old_news_ids)
+        if old_news_ids:
+            self._collection.delete(ids=old_news_ids)
         
         
         # get the list of textual data that we want to store in the vector database
@@ -41,15 +42,16 @@ class NewsVectorStorage:
         documents = news_dataframe.apply(lambda row: str(row['title']) + ' ' + str(row['summary']), axis=1).tolist()
         
         # get the dictionary of metadata that we want to store in the vector database
-        metadatas = metadatas=news_dataframe[['link', 'domain', 'published', 'title', 'summary']].to_dict(orient='records')  #  orient='records' instructs Pandas to represent each row in the DataFrame as a separate dictionary within a list
+        # orient='records' instructs Pandas to represent each row in the DataFrame as a separate dictionary within a list
+        metadatas = metadatas=news_dataframe[['link', 'domain', 'published', 'title', 'summary']].to_dict(orient='records')
         
         # we use link as the unique identifier for each document (article)
         ids = news_dataframe.apply(lambda row: str(row['link']), axis=1).tolist()
-        #self._collection.upsert(documents=documents, metadatas=metadatas, ids=ids)
         # upsert each document and its metadata one by one to prevent memory issues on the server
         for doc, meta, id in zip(documents, metadatas, ids):
             print("upserting document with id: ", id)
             self._collection.upsert(documents=[doc], metadatas=[meta], ids=[id])
+        self._write_last_updated_time()
     
     def _write_last_updated_time(self):
         with open('vector_database/last_updated_time.txt', 'w') as f:
@@ -63,6 +65,9 @@ class NewsVectorStorage:
             return False
         
     def are_news_outdated(self):
+        '''
+        If there is no time saved or the last update was more than 24 hours ago, return True (news are outdated)
+        '''
         last_updated_time = self._read_last_updated_time()
         if last_updated_time:
             return time.time() - last_updated_time > 60 * 60 * 24  # 24 hours

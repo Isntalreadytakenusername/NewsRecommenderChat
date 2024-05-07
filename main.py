@@ -47,25 +47,18 @@ def read_root():
 
 @app.get("/load_new_news")
 def load_new_news():
-    # List of RSS feed URLs
-    feeds_urls = [
-    'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/US.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Health.xml'
-    ]
-
-    # Store news title+summary as embeddings in a vector database with metadata
     news_vector_storage = NewsVectorStorage()
+
     if news_vector_storage.are_news_outdated():
-        # Retrieve news from RSS feeds
+        with open("RSS_feed_collector/rss_feeds.txt", "r") as file:
+            feeds_urls = [url.strip() for url in file.readlines()]
+        
+        # Retrieve news from RSS feeds using the list of URLs
         news_retriever = NewsRetriever(feeds_urls)
         news_df = news_retriever.retrieve_news()
 
+        # Load the news into the vector storage and update the timestamp
         news_vector_storage.load_news(news_dataframe=news_df)
-        news_vector_storage._write_last_updated_time()
         return {"status": "success"}
     return {"status": "already updated"}
 
@@ -81,9 +74,7 @@ def get_recommendations(user_id: str):
 # user id is inside the UserClick object
 @app.post("/submit_user_click/")
 async def submit_name_date(user_click: UserClick):
-    # Assuming you want to print or use the data somehow
     print(f"Received a user click. Name: {user_click.user_id}, Date: {user_click.title}, Date: {user_click.date}, Domain: {user_click.domain}")
-
     try:
         AppInformationHandler.save_user_click(user_click)
         return {"status": "success"}
