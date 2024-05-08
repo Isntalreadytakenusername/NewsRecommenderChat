@@ -105,6 +105,16 @@ class NewsVectorStorage:
         return results_df.sort_values(by='distance').head(articles_limit)
     
     def query_random(self, articles_limit=30, ids_to_exclude=None):
+        """Retrieves top 30 most recent (or custom number) articles from vector db
+        Based on quering by a list of topics that correspond to user interests.
+
+        Args:
+            topics (list): list of user interests (e.g. US Presidential Elections)
+            topics_limit (int, optional): maximum # of articles to return. Defaults to 30.
+
+        Returns:
+            pandas.DataFrame: returns the query results as a pandas DataFrame with distance, link, domain (of the webpage), published (date) columns
+        """
         if ids_to_exclude is None:
             ids_to_exclude = []
         

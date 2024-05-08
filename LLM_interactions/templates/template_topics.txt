@@ -2,6 +2,6 @@ Articles that user interacted with in the last {days} days: {articles}
 User preferences: {preferences}
 ---------------------
 Provide a list of topics that the user might be interested in based on their interaction history and preferences in form of a JSON.
-Make sure the topics you suggest make sense for news recommendations. Do not produce random topics.
+Make sure the topics you suggest make sense for news recommendations. Do not produce random topics. Remember to consider interaction history as well as preferences.
 If no preferences are available, return an empty list.
 Example: topics_of_interest: ['US Presidential Elections', 'Cake recipies', 'Bitcoin']
