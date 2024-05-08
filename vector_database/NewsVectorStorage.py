@@ -104,10 +104,22 @@ class NewsVectorStorage:
         # order by distance ascending and limit the number of articles
         return results_df.sort_values(by='distance').head(articles_limit)
     
-    def query_random(self, articles_limit = 30):
-        results = self._collection.get()["ids"]
-        random_ids = random.sample(results, articles_limit)
-        results = self._collection.get(ids=random_ids)
+    def query_random(self, articles_limit=30, ids_to_exclude=None):
+        if ids_to_exclude is None:
+            ids_to_exclude = []
+        
+        # retrieve all ids and filter out those that need to be excluded
+        all_ids = self._collection.get()["ids"]
+        filtered_ids = [id for id in all_ids if id not in ids_to_exclude]
+        
+        # if there happens to be less ids than the limit, return all of them
+        if len(filtered_ids) <= articles_limit:
+            sampled_ids = filtered_ids
+        else:
+            sampled_ids = random.sample(filtered_ids, articles_limit)
+        
+        # retrieve and return the data for the sampled ids
+        results = self._collection.get(ids=sampled_ids)
         return self.random_to_dataframe(results)
     
     @staticmethod

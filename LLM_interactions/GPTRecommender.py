@@ -83,7 +83,7 @@ class GPTRecommender:
         Returns:
         pd.DataFrame: A DataFrame containing a combination of recommended titles and randomly selected articles.
         """
-        random_articles = self.news_vector_storage.query_random(5)
+        random_articles = self.news_vector_storage.query_random(5, ids_to_exclude=recommended_titles["link"].tolist())
         random_articles["explanations"] = "We thought you might like these articles as well."
         return pd.concat([recommended_titles, random_articles], ignore_index=True)
         
