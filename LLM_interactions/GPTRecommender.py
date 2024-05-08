@@ -193,4 +193,6 @@ class GPTRecommender:
         if adjusted_recommendation["preferences"] is not None:
             with open(f'LLM_interactions/UserPreferences/{user_id}.txt', 'w') as file:
                 file.write(adjusted_recommendation["preferences"])
+                self.logger.info(f"!!! Updated preferences for user {user_id}: {adjusted_recommendation['preferences']}")
+                self.logger.info(f'LLM_interactions/UserPreferences/{user_id}.txt')
         return adjusted_recommendation
